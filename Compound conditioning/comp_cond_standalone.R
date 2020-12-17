@@ -1,0 +1,137 @@
+source('load_packages.R', local= TRUE)
+source('my_theme.R', local= TRUE)
+source('model.R', local= TRUE)
+
+# Compound conditioning: combining stimuli with different associative histories
+#Inputs
+alpha_value_A= 0.3
+alpha_value_B = 0.3
+beta_value = 0.5
+selected_trial = 20
+
+prev_alpha = alpha_value_A
+prev_beta =  beta_value
+
+#Dataframe
+n_trial<-as.numeric(selected_trial)
+half_trial<- n_trial/2
+trial<- c(1:n_trial)
+
+alpha_A<- rep(alpha_value_A, n_trial)
+alpha_B<- rep(alpha_value_B, n_trial)
+beta<- rep(beta_value, n_trial)
+
+
+df<- data.frame(trial, alpha_A, alpha_B, beta)
+df <- df%>% mutate (trial_type = ifelse (df$beta==0, 'A', 'AB'))
+df<- model(df)
+
+df_long<- to.long(df)
+df_long<- label.df(df_long)
+
+
+#Spacing on x axis
+if (n_trial <= 20) {
+  seq(0, n_trial, 5)
+  x_spacing <- seq(0, n_trial, 1)
+} else if (n_trial > 20){
+  x_spacing<- seq(0, n_trial, 5)}
+
+
+#Limits y axis
+decide_max_limit<- function (y_vector) {
+  max_y_limit<- max(y_vector)
+  max_y_limit<- round((1.5* max_y_limit),1)
+  return(max_y_limit)
+}
+
+
+decide_min_limit<- function (y_vector) {
+  min_y_limit<- min(y_vector)
+  min_y_limit<- round((1.5* min_y_limit),1)
+  return(min_y_limit)
+}
+max_y_limit<- decide_max_limit(df_long$value_ass)
+min_y_limit<- decide_min_limit(df_long$value_ass)
+
+
+
+#Left panel plot
+df_long_element_ass<- (df_long[df_long$ass_indicator %in% c('A-US', 'B-US', 'US-A', 'US-B'), ])
+
+a<- ggplot(df_long_element_ass, aes(x= factor(trial), y= value_ass, group= factor(ass_indicator)))+
+  geom_line(size= 1, aes(color= ass_indicator), linetype = 'solid')+
+  geom_point(size= 2, color= '#000000', aes(shape= ass_indicator, fill= ass_indicator))+
+  scale_color_manual(values= c("#bf0000", "#ff9e9e", "#0025c9", "#00d3eb"))+
+  scale_fill_manual(values=  c("#bf0000", "#ff9e9e", "#0025c9", "#00d3eb"))+
+  scale_shape_manual(values= c(21, 22, 21, 22))+
+  scale_y_continuous (name= expression('Associative strength (V)'), limits = c(min_y_limit, max_y_limit)) +
+  scale_x_discrete(name= "Trials", breaks= x_spacing)+
+  theme_bw() +
+  my_theme
+
+
+df_long_compound_ass<- (df_long[df_long$ass_indicator %in% c('AD-US', 'BC-US', 'US-AD', 'US-BC'), ])
+
+b<- ggplot(df_long_compound_ass, aes(x= factor(trial), y= value_ass, group= factor(ass_indicator)))+
+  geom_line(size= 1, aes(color= ass_indicator), linetype = 'solid')+
+  geom_point(size= 2, color= '#000000', aes(shape= ass_indicator, fill= ass_indicator))+
+  scale_color_manual(values= c("#bf0000", "#ff9e9e", "#0025c9", "#00d3eb"))+
+  scale_fill_manual(values=  c("#bf0000", "#ff9e9e", "#0025c9", "#00d3eb"))+
+  scale_shape_manual(values= c(21, 22, 21, 22))+
+  scale_y_continuous (name= expression('Associative strength (V)'), limits = c(min_y_limit, max_y_limit)) +
+  scale_x_discrete(name= "Trials", breaks= x_spacing)+
+  theme_bw() +
+  my_theme
+
+
+
+
+
+#Right panel plot
+df_long_v_compound<- (df_long[df_long$ass_indicator %in% c('Σ AD', 'Σ BC'), ])
+labels_c<- c(expression('V'[COMB-AD]), expression('V'[COMB-BC]))
+
+c<- ggplot(df_long_v_compound, aes(x= factor(trial), y= value_ass, group= factor(ass_indicator)))+
+  geom_line(size= 1, aes(color= ass_indicator), linetype = 'solid')+
+  geom_point(size= 2, color= '#000000', aes( shape= ass_indicator, fill= ass_indicator))+
+  scale_color_manual(values= c("#000000", "#C0C0C0"), labels= labels_c)+
+  scale_fill_manual(values=  c("#000000", "#C0C0C0"), labels= labels_c)+
+  scale_shape_manual(values= c(21, 22), labels= labels_c)+
+  scale_y_continuous (name= expression('Distribution of V'[COMB]), limits = c(min_y_limit, max_y_limit)) +
+  scale_x_discrete(name= "Trials", breaks= x_spacing)+
+  theme_bw()+
+  my_theme
+
+
+
+df_long_response<- (df_long[df_long$response_type %in% c('CS-oriented (AD)', 'CS-oriented (BC)', 
+                                                'US-oriented (AD)', 'US-oriented (BC)'), ])
+df_long$response_type <-ordered(df_long$response_type, levels=  c('CS-oriented (AD)', 'CS-oriented (BC)', 
+                                                         'US-oriented (AD)', 'US-oriented (BC)'))
+
+labels_d<- c(expression('AD R'[CS]), expression('BC R'[CS]),  expression('AD R'[US]), expression('BC R'[US]))
+d <- ggplot(df_long_response, aes(x= factor(trial), y= value_response, group= response_type))+
+  geom_line(size= 1, aes(color= response_type), linetype = 'solid')+
+  geom_point(size= 2, color= '#000000', aes(fill= response_type, shape=response_type))+
+  scale_color_manual(values= c("#8900d9", "#0f946e", "#ff38ff", "#91e3c0"), labels= labels_d)+
+  scale_fill_manual(values= c("#8900d9", "#0f946e", "#ff38ff", "#91e3c0"), labels= labels_d)+
+  scale_shape_manual(values= c(21, 22, 21, 22), labels= labels_d)+
+  scale_y_continuous (name= expression('Distribution of V'[COMB]), limits = c(min_y_limit, max_y_limit)) +
+  scale_x_discrete(name= "Trials", breaks = x_spacing)+
+  theme_bw()+
+  my_theme
+
+
+
+grid1<- plot_grid(NULL, NULL, a, b, c , d ,
+               align = 'hv',
+               labels = c(" ", "", "A", "B", "C", "D"),
+               hjust = -0.1,
+               ncol=2 ,
+               nrow = 3,
+               rel_heights =  c(0.3, 1,1), rel_widths = c(1, 1))
+
+
+p <-grid1 + draw_label(label= 'Compound conditioning with different associative histories', x= 0.5 ,y=0.94, color = "#d73925", size= 16)
+p
