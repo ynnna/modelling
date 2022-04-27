@@ -2,7 +2,6 @@
 
 ## Contact details
 + email: iliescuaf@gmail.com
-+ Institutional profile: [Dr Adela Iliescu](https://www.cardiff.ac.uk/people/view/2420714-).
 
 ## Software 
 The software needed to reproduce these simulation is R and RStudio. 
