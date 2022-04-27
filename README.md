@@ -1,7 +1,7 @@
 # ReadME
 
 ## Contact details
-+ email: iliescuaf@cardiff.ac.uk
++ email: iliescuaf@gmail.com
 + Institutional profile: [Dr Adela Iliescu](https://www.cardiff.ac.uk/people/view/2420714-).
 
 ## Software 
